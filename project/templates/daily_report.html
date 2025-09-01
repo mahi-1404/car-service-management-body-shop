@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Daily Report - Car Service Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-calendar-day"></i> Daily Report</h1>
+    <a href="{{ url_for('generate_report', type='daily', format='pdf') }}" class="btn btn-danger" target="_blank">
+        <i class="fas fa-file-pdf"></i> Download as PDF
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>S.No</th>
+                        <th>Vehicle No.</th>
+                        <th>Customer</th>
+                        <th>Phone</th>
+                        <th>Insurance</th>
+                        <th>Claim No.</th>
+                        <th>Engine No.</th>
+                        <th>Chassis No.</th>
+                        <th>Check-in</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vehicle in vehicles %}
+                    <tr>
+                        <td>{{ vehicle.serial_number }}</td>
+                        <td>{{ vehicle.vehicle_number }}</td>
+                        <td>{{ vehicle.customer_name }}</td>
+                        <td>{{ vehicle.phone_number }}</td>
+                        <td>{{ vehicle.insurance_name }}</td>
+                        <td>{{ claims.get(vehicle.vehicle_number, 'N/A') }}</td>
+                        <td>{{ vehicle.engine_number }}</td>
+                        <td>{{ vehicle.chassis_number }}</td>
+                        <td>{{ vehicle.check_in_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

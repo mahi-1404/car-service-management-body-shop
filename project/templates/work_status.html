@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Work Status - {{ vehicle.vehicle_number }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-tasks"></i> Work Status - {{ vehicle.vehicle_number }}</h1>
+            <a href="{{ url_for('search_vehicle', vehicle_number=vehicle.vehicle_number) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Vehicle Details
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Overview -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h5 class="mb-2">Overall Progress</h5>
+                <div class="progress" style="height: 25px;">
+                    <div class="progress-bar 
+                        {% if progress == 100 %}bg-success
+                        {% elif progress >= 75 %}bg-info
+                        {% elif progress >= 50 %}bg-warning
+                        {% else %}bg-danger{% endif %}" 
+                        role="progressbar" 
+                        style="width: {{ progress }}%"
+                        aria-valuenow="{{ progress }}" 
+                        aria-valuemin="0" 
+                        aria-valuemax="100">
+                        {{ progress }}% Complete
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <h3 class="mb-0 
+                    {% if progress == 100 %}text-success
+                    {% elif progress >= 50 %}text-warning
+                    {% else %}text-danger{% endif %}">
+                    {{ progress }}%
+                </h3>
+                <small class="text-muted">
+                    {{ work_items|selectattr('is_completed')|list|length }} of {{ work_items|length }} tasks completed
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Work Items Checklist -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-list-check"></i> Work Checklist</h5>
+        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
+            <i class="fas fa-plus"></i> Add Custom Item
+        </button>
+    </div>
+    <div class="card-body">
+        {% if work_items %}
+        <div class="list-group list-group-flush">
+            {% for item in work_items %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" 
+                           id="item_{{ item.id }}" 
+                           {% if item.is_completed %}checked{% endif %}
+                           onchange="updateWorkItem({{ item.id }}, this.checked)">
+                    <label class="form-check-label {% if item.is_completed %}text-decoration-line-through text-muted{% endif %}" 
+                           for="item_{{ item.id }}">
+                        <strong>{{ item.item_name }}</strong>
+                        {% if item.completion_date %}
+                        <br><small class="text-success">
+                            <i class="fas fa-check-circle"></i> Completed on {{ item.completion_date.strftime('%Y-%m-%d %H:%M') }}
+                        </small>
+                        {% endif %}
+                    </label>
+                </div>
+                <div>
+                    <button class="btn btn-sm btn-outline-danger me-2" 
+                            onclick="removeWorkItem({{ item.id }})" title="Remove Item">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    {% if item.is_completed %}
+                    <span class="badge bg-success">
+                        <i class="fas fa-check"></i> Done
+                    </span>
+                    {% else %}
+                    <span class="badge bg-warning">
+                        <i class="fas fa-clock"></i> Pending
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No work items found</h5>
+            <p class="text-muted">Add work items to track progress.</p>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                <i class="fas fa-plus"></i> Add First Item
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add Item Modal -->
+<div class="modal fade" id="addItemModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Custom Work Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addItemForm">
+                    <div class="mb-3">
+                        <label for="itemName" class="form-label">Work Item Name</label>
+                        <input type="text" class="form-control" id="itemName" 
+                               placeholder="e.g., Replace brake pads" required>
+                        <div class="form-text">Enter a descriptive name for the work item</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addWorkItem()">
+                    <i class="fas fa-plus"></i> Add Item
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateWorkItem(itemId, isCompleted) {
+    fetch(`/update_work_item/${itemId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            is_completed: isCompleted
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reload page to update progress and timestamps
+            location.reload();
+        } else {
+            alert('Error updating work item');
+            // Revert checkbox state
+            document.getElementById(`item_${itemId}`).checked = !isCompleted;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating work item');
+        // Revert checkbox state
+        document.getElementById(`item_${itemId}`).checked = !isCompleted;
+    });
+}
+
+function addWorkItem() {
+    const itemName = document.getElementById('itemName').value.trim();
+    
+    if (!itemName) {
+        alert('Please enter a work item name');
+        return;
+    }
+    
+    fetch(`/add_work_item/{{ vehicle.vehicle_number }}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            item_name: itemName
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close modal and reload page
+            bootstrap.Modal.getInstance(document.getElementById('addItemModal')).hide();
+            location.reload();
+        } else {
+            alert(data.error || 'Error adding work item');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error adding work item');
+    });
+}
+
+function removeWorkItem(itemId) {
+    if (confirm('Are you sure you want to remove this work item?')) {
+        fetch(`/remove_work_item/${itemId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error removing work item');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error removing work item');
+        });
+    }
+}
+
+// Handle Enter key in add item form
+document.getElementById('itemName').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        addWorkItem();
+    }
+});
+</script>
+{% endblock %}

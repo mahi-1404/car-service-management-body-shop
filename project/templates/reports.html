@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Car Service Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-chart-bar"></i> Reports & Analytics</h1>
+</div>
+
+<!-- Report Generation -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-calendar-day"></i> Daily Reports</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Generate reports for today's activities and progress.</p>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('daily_report') }}" class="btn btn-primary">
+                        <i class="fas fa-eye"></i> View
+                    </a>
+                    <a href="{{ url_for('generate_report', type='daily', format='pdf') }}" 
+                       class="btn btn-danger" target="_blank">
+                        <i class="fas fa-file-pdf"></i> PDF Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Monthly Reports</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Generate comprehensive monthly performance reports.</p>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('monthly_report') }}" class="btn btn-primary">
+                        <i class="fas fa-eye"></i> View
+                    </a>
+                    <a href="{{ url_for('generate_report', type='monthly', format='pdf') }}" 
+                       class="btn btn-danger" target="_blank">
+                        <i class="fas fa-file-pdf"></i> PDF Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-car"></i> All Cars Report</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Generate a detailed report of all cars in the system.</p>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('all_cars_report') }}" class="btn btn-primary">
+                        <i class="fas fa-eye"></i> View
+                    </a>
+                    <a href="{{ url_for('generate_report', type='all_cars', format='pdf') }}" 
+                       class="btn btn-danger" target="_blank">
+                        <i class="fas fa-file-pdf"></i> PDF Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 id="totalVehicles">-</h4>
+                        <p class="mb-0">Total Vehicles</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-car fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 id="completedVehicles">-</h4>
+                        <p class="mb-0">Completed</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 id="inProgressVehicles">-</h4>
+                        <p class="mb-0">In Progress</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-cog fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 id="completionRate">-</h4>
+                        <p class="mb-0">Completion Rate</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-chart-pie fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report History -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-history"></i> Recent Reports</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Report Type</th>
+                        <th>Generated Date</th>
+                        <th>Format</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="reportHistory">
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">
+                            <i class="fas fa-spinner fa-spin"></i> Loading report history...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboardStats();
+    loadReportHistory();
+});
+
+function loadDashboardStats() {
+    // Fetch real-time data from the server
+    fetch('/api/dashboard_stats')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('totalVehicles').textContent = data.total || '0';
+            document.getElementById('completedVehicles').textContent = data.completed || '0';
+            document.getElementById('inProgressVehicles').textContent = data.in_progress || '0';
+            document.getElementById('completionRate').textContent = (data.completion_rate || 0) + '%';
+        })
+        .catch(error => {
+            console.error('Error loading stats:', error);
+            // Fallback to showing zeros
+            document.getElementById('totalVehicles').textContent = '0';
+            document.getElementById('completedVehicles').textContent = '0';
+            document.getElementById('inProgressVehicles').textContent = '0';
+            document.getElementById('completionRate').textContent = '0%';
+        });
+}
+
+function loadReportHistory() {
+    // Show available reports
+    const tbody = document.getElementById('reportHistory');
+    tbody.innerHTML = `
+        <tr>
+            <td><i class="fas fa-calendar-day text-primary"></i> Daily Report</td>
+            <td>${new Date().toLocaleDateString()}</td>
+            <td><span class="badge bg-danger">PDF</span></td>
+            <td><span class="badge bg-success">Available</span></td>
+            <td>
+                <a href="{{ url_for('generate_report', type='daily', format='pdf') }}" 
+                   class="btn btn-sm btn-outline-primary" target="_blank">
+                    <i class="fas fa-download"></i> Generate
+                </a>
+            </td>
+        </tr>
+        <tr>
+            <td><i class="fas fa-calendar-alt text-info"></i> Monthly Report</td>
+            <td>${new Date(new Date().setDate(1)).toLocaleDateString()}</td>
+            <td><span class="badge bg-success">Excel</span></td>
+            <td><span class="badge bg-success">Available</span></td>
+            <td>
+                <a href="{{ url_for('generate_report', type='monthly', format='excel') }}" 
+                   class="btn btn-sm btn-outline-primary" target="_blank">
+                    <i class="fas fa-download"></i> Generate
+                </a>
+            </td>
+        </tr>
+    `;
+}
+
+function downloadReport(filename) {
+    // In a real implementation, this would download the actual report file
+    alert(`Downloading ${filename}...`);
+}
+</script>
+{% endblock %}

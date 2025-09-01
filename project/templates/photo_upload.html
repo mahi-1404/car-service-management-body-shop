@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Photos - {{ vehicle.vehicle_number }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-camera"></i> Upload Photos - {{ vehicle.vehicle_number }}</h1>
+            <a href="{{ url_for('view_photos', vehicle_number=vehicle.vehicle_number) }}" class="btn btn-outline-primary">
+                <i class="fas fa-images"></i> View Uploaded Photos
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Vehicle Info -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <strong>Serial Number:</strong> {{ vehicle.serial_number }}
+            </div>
+            <div class="col-md-3">
+                <strong>Check-in Date:</strong> {{ vehicle.check_in_date.strftime('%Y-%m-%d') }}
+            </div>
+            <div class="col-md-3">
+                <strong>KM Reading:</strong> {{ "{:,}".format(vehicle.kilometer_reading) }} km
+            </div>
+            <div class="col-md-3">
+                <strong>Engine:</strong> {{ vehicle.engine_number }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Photo Upload Form -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-upload"></i> Upload Inspection Photos</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data" id="photoUploadForm">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>Instructions:</strong> Upload clear, high-quality photos for each section. 
+                Supported formats: JPG, PNG, GIF. No file size limit.
+            </div>
+            
+            <div class="row">
+                <!-- Standard Photo Types -->
+                <div class="col-md-6">
+                    <h6 class="text-primary mb-3"><i class="fas fa-car"></i> Vehicle Exterior</h6>
+                    
+                    <div class="mb-3">
+                        <label for="front" class="form-label">Front View</label>
+                        <input type="file" class="form-control" id="front" name="front" accept="image/*">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="right_front" class="form-label">Right Front</label>
+                        <input type="file" class="form-control" id="right_front" name="right_front" accept="image/*">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="full_right" class="form-label">Full Right Side</label>
+                        <input type="file" class="form-control" id="full_right" name="full_right" accept="image/*">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="right_back" class="form-label">Right Back</label>
+                        <input type="file" class="form-control" id="right_back" name="right_back" accept="image/*">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="full_back" class="form-label">Full Back View</label>
+                        <input type="file" class="form-control" id="full_back" name="full_back" accept="image/*">
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <h6 class="text-primary mb-3"><i class="fas fa-car"></i> Vehicle Details</h6>
+                    
+                    <div class="mb-3">
+                        <label for="left_back" class="form-label">Left Back</label>
+                        <input type="file" class="form-control" id="left_back" name="left_back" accept="image/*">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="full_left" class="form-label">Full Left Side</label>
+                        <input type="file" class="form-control" id="full_left" name="full_left" accept="image/*">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="left_front" class="form-label">Left Front</label>
+                        <input type="file" class="form-control" id="left_front" name="left_front" accept="image/*">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="odometer" class="form-label">Odometer Reading</label>
+                        <input type="file" class="form-control" id="odometer" name="odometer" accept="image/*">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="chassis_number" class="form-label">Chassis Number</label>
+                        <input type="file" class="form-control" id="chassis_number" name="chassis_number" accept="image/*">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Damage Photos -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h6 class="text-danger mb-3"><i class="fas fa-exclamation-triangle"></i> Damage Documentation</h6>
+                    <div class="mb-3">
+                        <label for="damages" class="form-label">Damage Photos (Multiple allowed)</label>
+                        <input type="file" class="form-control" id="damages" name="damages" accept="image/*" multiple>
+                        <div class="form-text">You can select multiple files to upload damage photos</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Upload Progress -->
+            <div id="uploadProgress" class="mb-3" style="display: none;">
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" style="width: 0%"></div>
+                </div>
+                <small class="text-muted">Uploading photos...</small>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('search_vehicle', vehicle_number=vehicle.vehicle_number) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Vehicle Details
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-upload"></i> Upload Photos
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('photoUploadForm').addEventListener('submit', function(e) {
+    const progressDiv = document.getElementById('uploadProgress');
+    const progressBar = progressDiv.querySelector('.progress-bar');
+    const submitBtn = this.querySelector('button[type="submit"]');
+    
+    // Show progress bar
+    progressDiv.style.display = 'block';
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+    
+    // Simulate progress (in real implementation, you'd track actual upload progress)
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += Math.random() * 30;
+        if (progress > 90) progress = 90;
+        progressBar.style.width = progress + '%';
+    }, 500);
+    
+    // Clean up on form submission
+    setTimeout(() => {
+        clearInterval(interval);
+        progressBar.style.width = '100%';
+    }, 2000);
+});
+
+// File validation
+document.querySelectorAll('input[type="file"]').forEach(input => {
+    input.addEventListener('change', function(e) {
+        const files = e.target.files;
+        const maxSize = 16 * 1024 * 1024; // 16MB
+        
+        for (let file of files) {
+            if (file.size > maxSize) {
+                alert(`File "${file.name}" is too large. Maximum size is 16MB.`);
+                e.target.value = '';
+                return;
+            }
+            
+            if (!file.type.startsWith('image/')) {
+                alert(`File "${file.name}" is not a valid image file.`);
+                e.target.value = '';
+                return;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

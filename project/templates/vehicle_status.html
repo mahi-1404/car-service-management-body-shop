@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}Vehicle Status - {{ vehicle.vehicle_number }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-car"></i> {{ vehicle.vehicle_number }}</h1>
+            <div>
+                <span class="badge bg-{% if progress == 100 %}success{% elif progress >= 50 %}warning{% else %}danger{% endif %} fs-6">
+                    {{ progress }}% Complete
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Vehicle Information -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-info-circle"></i> Vehicle Information</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <strong>Serial Number:</strong><br>
+                <span class="text-primary">#{{ vehicle.serial_number }}</span>
+            </div>
+            <div class="col-md-3">
+                <strong>Check-in Date:</strong><br>
+                {{ vehicle.check_in_date.strftime('%Y-%m-%d %H:%M') }}
+            </div>
+            <div class="col-md-3">
+                <strong>KM Reading:</strong><br>
+                {{ "{:,}".format(vehicle.kilometer_reading) }} km
+            </div>
+            <div class="col-md-3">
+                <strong>Engine Number:</strong><br>
+                {{ vehicle.engine_number }}
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <strong>Chassis Number:</strong><br>
+                {{ vehicle.chassis_number }}
+            </div>
+            <div class="col-md-6">
+                <strong>Description:</strong><br>
+                {{ vehicle.description or 'No description provided' }}
+            </div>
+        </div>
+        {% if vehicle.customer_name or vehicle.insurance_name %}
+        <div class="row mt-3">
+            {% if vehicle.customer_name %}
+            <div class="col-md-4">
+                <strong>Customer Name:</strong><br>
+                {{ vehicle.customer_name }}
+            </div>
+            {% endif %}
+            {% if vehicle.phone_number %}
+            <div class="col-md-4">
+                <strong>Phone Number:</strong><br>
+                {{ vehicle.phone_number }}
+            </div>
+            {% endif %}
+            {% if vehicle.insurance_name %}
+            <div class="col-md-4">
+                <strong>Insurance Name:</strong><br>
+                {{ vehicle.insurance_name }}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Progress Overview -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-chart-line"></i> Progress Overview</h5>
+    </div>
+    <div class="card-body">
+        <div class="progress mb-3" style="height: 25px;">
+            <div class="progress-bar 
+                {% if progress == 100 %}bg-success
+                {% elif progress >= 75 %}bg-info
+                {% elif progress >= 50 %}bg-warning
+                {% else %}bg-danger{% endif %}" 
+                role="progressbar" 
+                style="width: {{ progress }}%"
+                aria-valuenow="{{ progress }}" 
+                aria-valuemin="0" 
+                aria-valuemax="100">
+                {{ progress }}% Complete
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-2">
+                <div class="text-center">
+                    <i class="fas fa-clipboard-list fa-2x text-success"></i>
+                    <div class="mt-2">
+                        <strong>Inventory</strong><br>
+                        <span class="badge bg-success">Complete</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="text-center">
+                    <i class="fas fa-camera fa-2x {% if photos %}text-success{% else %}text-muted{% endif %}"></i>
+                    <div class="mt-2">
+                        <strong>Photos</strong><br>
+                        <span class="badge bg-{% if photos %}success{% else %}secondary{% endif %}">
+                            {% if photos %}Complete{% else %}Pending{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="text-center">
+                    <i class="fas fa-file-alt fa-2x {% if registration and registration.is_completed %}text-success{% else %}text-muted{% endif %}"></i>
+                    <div class="mt-2">
+                        <strong>Registration</strong><br>
+                        <span class="badge bg-{% if registration and registration.is_completed %}success{% else %}secondary{% endif %}">
+                            {% if registration and registration.is_completed %}Complete{% else %}Pending{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="text-center">
+                    <i class="fas fa-receipt fa-2x {% if claim and claim.claim_number %}text-success{% else %}text-muted{% endif %}"></i>
+                    <div class="mt-2">
+                        <strong>Claim</strong><br>
+                        <span class="badge bg-{% if claim and claim.claim_number %}success{% else %}secondary{% endif %}">
+                            {% if claim and claim.claim_number %}Complete{% else %}Pending{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="text-center">
+                    <i class="fas fa-check-circle fa-2x {% if approval and approval.is_approved %}text-success{% else %}text-muted{% endif %}"></i>
+                    <div class="mt-2">
+                        <strong>Approval</strong><br>
+                        <span class="badge bg-{% if approval and approval.is_approved %}success{% else %}secondary{% endif %}">
+                            {% if approval and approval.is_approved %}Complete{% else %}Pending{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="text-center">
+                    <i class="fas fa-tasks fa-2x {% if work_items and work_items|selectattr('is_completed')|list|length == work_items|length %}text-success{% else %}text-muted{% endif %}"></i>
+                    <div class="mt-2">
+                        <strong>Work</strong><br>
+                        <span class="badge bg-{% if work_items and work_items|selectattr('is_completed')|list|length == work_items|length %}success{% else %}secondary{% endif %}">
+                            {% if work_items and work_items|selectattr('is_completed')|list|length == work_items|length %}Complete{% else %}Pending{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6><i class="fas fa-file-alt"></i> Registration Status</h6>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="registrationStatus" 
+                           {% if registration and registration.is_completed %}checked{% endif %}
+                           data-autosave data-vehicle="{{ vehicle.vehicle_number }}" data-field="registration">
+                    <label class="form-check-label" for="registrationStatus">
+                        Registration Completed
+                    </label>
+                </div>
+                {% if registration and registration.completion_date %}
+                <small class="text-muted">
+                    Completed: {{ registration.completion_date.strftime('%Y-%m-%d %H:%M') }}
+                </small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6><i class="fas fa-receipt"></i> Claim Number</h6>
+                <input type="text" class="form-control" placeholder="Enter claim number" 
+                       value="{{ claim.claim_number if claim else '' }}"
+                       data-autosave data-vehicle="{{ vehicle.vehicle_number }}" data-field="claim">
+                {% if claim and claim.updated_date %}
+                <small class="text-muted">
+                    Updated: {{ claim.updated_date.strftime('%Y-%m-%d %H:%M') }}
+                </small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6><i class="fas fa-check-circle"></i> Approval Status</h6>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="approvalStatus" 
+                           {% if approval and approval.is_approved %}checked{% endif %}
+                           data-autosave data-vehicle="{{ vehicle.vehicle_number }}" data-field="approval">
+                    <label class="form-check-label" for="approvalStatus">
+                        Application Approved
+                    </label>
+                </div>
+                {% if approval and approval.approval_date %}
+                <small class="text-muted">
+                    Approved: {{ approval.approval_date.strftime('%Y-%m-%d %H:%M') }}
+                </small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ url_for('upload_photos', vehicle_number=vehicle.vehicle_number) }}" class="btn btn-primary">
+                <i class="fas fa-camera"></i> Upload Photos
+            </a>
+            {% if photos %}
+            <a href="{{ url_for('view_photos', vehicle_number=vehicle.vehicle_number) }}" class="btn btn-outline-primary">
+                <i class="fas fa-images"></i> View Photos ({{ photos|length }})
+            </a>
+            {% endif %}
+            <a href="{{ url_for('work_status', vehicle_number=vehicle.vehicle_number) }}" class="btn btn-info">
+                <i class="fas fa-tasks"></i> Work Status
+            </a>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

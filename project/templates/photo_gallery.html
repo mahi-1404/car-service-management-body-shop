@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Photos - {{ vehicle.vehicle_number }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-images"></i> Photos - {{ vehicle.vehicle_number }}</h1>
+            <div>
+                <a href="{{ url_for('upload_photos', vehicle_number=vehicle.vehicle_number) }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Upload More Photos
+                </a>
+                <a href="{{ url_for('search_vehicle', vehicle_number=vehicle.vehicle_number) }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Vehicle
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Vehicle Info -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <strong>Serial Number:</strong> {{ vehicle.serial_number }}
+            </div>
+            <div class="col-md-3">
+                <strong>Check-in Date:</strong> {{ vehicle.check_in_date.strftime('%Y-%m-%d') }}
+            </div>
+            <div class="col-md-3">
+                <strong>KM Reading:</strong> {{ "{:,}".format(vehicle.kilometer_reading) }} km
+            </div>
+            <div class="col-md-3">
+                <strong>Total Photos:</strong> {{ total_photos }}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if photo_groups %}
+<!-- Photo Gallery -->
+{% for photo_type, photos in photo_groups.items() %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-{% if photo_type == 'damage' %}exclamation-triangle text-danger{% else %}camera{% endif %}"></i>
+            {{ photo_type.replace('_', ' ').title() }}
+            <span class="badge bg-secondary">{{ photos|length }}</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for photo in photos %}
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card">
+                    <img src="{{ url_for('serve_photo', filepath=photo.filepath) }}" 
+                         class="card-img-top photo-thumbnail" 
+                         alt="{{ photo.photo_type }}"
+                         style="height: 200px; object-fit: cover; cursor: pointer;"
+                         onclick="openPhotoModal('{{ url_for('serve_photo', filepath=photo.filepath) }}', '{{ photo.filename }}')">
+                    <div class="card-body p-2">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar"></i> {{ photo.upload_date.strftime('%Y-%m-%d %H:%M') }}
+                        </small>
+                        <br>
+                        <small class="text-muted">{{ photo.filename }}</small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Photo Modal -->
+<div class="modal fade" id="photoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="photoModalTitle">Photo View</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalPhoto" src="" class="img-fluid" alt="Photo">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a id="downloadPhoto" href="" download class="btn btn-primary">
+                    <i class="fas fa-download"></i> Download
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<!-- No Photos -->
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-camera fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">No photos uploaded yet</h5>
+        <p class="text-muted">Start by uploading inspection photos for this vehicle.</p>
+        <a href="{{ url_for('upload_photos', vehicle_number=vehicle.vehicle_number) }}" class="btn btn-primary">
+            <i class="fas fa-upload"></i> Upload Photos
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openPhotoModal(photoUrl, filename) {
+    document.getElementById('modalPhoto').src = photoUrl;
+    document.getElementById('photoModalTitle').textContent = filename;
+    document.getElementById('downloadPhoto').href = photoUrl;
+    
+    const modal = new bootstrap.Modal(document.getElementById('photoModal'));
+    modal.show();
+}
+
+// Add lightbox-style navigation
+document.addEventListener('keydown', function(e) {
+    const modal = document.getElementById('photoModal');
+    if (modal.classList.contains('show')) {
+        if (e.key === 'Escape') {
+            bootstrap.Modal.getInstance(modal).hide();
+        }
+    }
+});
+</script>
+{% endblock %}

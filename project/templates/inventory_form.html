@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Add Vehicle - Car Service Management{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-plus"></i> Add New Vehicle</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="inventoryForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="vehicle_number" class="form-label">Vehicle Number *</label>
+                                <input type="text" class="form-control" id="vehicle_number" name="vehicle_number" 
+                                       required style="text-transform: uppercase;" placeholder="e.g., MH12AB1234">
+                                <div class="form-text">Enter the vehicle registration number</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="kilometer_reading" class="form-label">Kilometer Reading *</label>
+                                <input type="number" class="form-control" id="kilometer_reading" name="kilometer_reading" 
+                                       required min="0" placeholder="e.g., 45000">
+                                <div class="form-text">Current odometer reading</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Customer Details Section -->
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="addCustomerDetails">
+                            <label class="form-check-label" for="addCustomerDetails">
+                                Add Customer Details
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div id="customerDetailsSection" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="vehicle_name" class="form-label">Vehicle Name</label>
+                                    <input type="text" class="form-control" id="vehicle_name" name="vehicle_name" 
+                                           placeholder="e.g., Honda City">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="customer_name" class="form-label">Customer Name</label>
+                                    <input type="text" class="form-control" id="customer_name" name="customer_name" 
+                                           placeholder="e.g., John Doe">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="phone_number" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phone_number" name="phone_number" 
+                                           placeholder="e.g., 9876543210" maxlength="15">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="insurance_name" class="form-label">Insurance Name *</label>
+                                    <input type="text" class="form-control" id="insurance_name" name="insurance_name" 
+                                           placeholder="e.g., HDFC ERGO, ICICI Lombard" required>
+                                    <div class="form-text">Enter the insurance company name</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="engine_number" class="form-label">Engine Number *</label>
+                                <input type="text" class="form-control" id="engine_number" name="engine_number" 
+                                       required placeholder="e.g., ABC123456">
+                                <div class="form-text">Engine identification number</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="chassis_number" class="form-label">Chassis Number *</label>
+                                <input type="text" class="form-control" id="chassis_number" name="chassis_number" 
+                                       required placeholder="e.g., XYZ789012">
+                                <div class="form-text">Vehicle chassis/VIN number</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description/Notes</label>
+                        <textarea class="form-control" id="description" name="description" rows="4" 
+                                  placeholder="Enter any additional notes about the vehicle condition, customer requests, etc."></textarea>
+                        <div class="form-text">Optional: Add any relevant notes or observations</div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Note:</strong> Serial number and check-in date will be automatically generated.
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Add Vehicle
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('inventoryForm').addEventListener('submit', function(e) {
+    const vehicleNumber = document.getElementById('vehicle_number').value.trim();
+    const kmReading = document.getElementById('kilometer_reading').value;
+    const engineNumber = document.getElementById('engine_number').value.trim();
+    const chassisNumber = document.getElementById('chassis_number').value.trim();
+    
+    if (!vehicleNumber || !kmReading || !engineNumber || !chassisNumber) {
+        e.preventDefault();
+        alert('Please fill in all required fields.');
+        return false;
+    }
+    
+    if (kmReading < 0) {
+        e.preventDefault();
+        alert('Kilometer reading cannot be negative.');
+        return false;
+    }
+});
+
+// Auto-uppercase vehicle number
+document.getElementById('vehicle_number').addEventListener('input', function(e) {
+    e.target.value = e.target.value.toUpperCase();
+});
+
+// Toggle customer details section
+document.getElementById('addCustomerDetails').addEventListener('change', function(e) {
+    const customerSection = document.getElementById('customerDetailsSection');
+    if (e.target.checked) {
+        customerSection.style.display = 'block';
+    } else {
+        customerSection.style.display = 'none';
+    }
+});
+
+// Format phone number
+document.getElementById('phone_number').addEventListener('input', function(e) {
+    e.target.value = e.target.value.replace(/\D/g, '');
+});
+</script>
+{% endblock %}
